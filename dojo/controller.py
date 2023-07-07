@@ -598,9 +598,10 @@ class Controller(object):
     # we need to load additional tiles until this is not the case anymore
     #
     [row_val, old_tile] = self.edge_iter(tile_dict, row_val)
-
+    #old_tile = tile_dict
     # temporarily flatten
-    for seg in self.ids: row_val[np.where(row_val == seg)] = self.label_id
+    for seg in self.ids: 
+      row_val[np.where(row_val == seg)] = self.label_id
 
     # Apply saved hardened merges
     lut = self.get_hard_merge_table()
@@ -617,14 +618,14 @@ class Controller(object):
 
     s_tile = np.zeros(row_val.shape)
     s_tile[row_val == self.label_id] = 1
-
-    # mh.imsave('../t_val.jpg', row_val.astype(np.uint8))
+    #print(row_val)
+    #mh.imsave('/home/boyu/t_val.jpg', row_val.astype(np.uint8))
 
     for c in i_js:
       s_tile[c[1]-offset_y, c[0]-offset_x] = 0
 
     label_image,n = mh.label(s_tile)
-
+    #mh.imsave('/home/boyu/label.jpg', row_val.astype(np.uint8))
     # check which label was selected
     selected_label = label_image[click[1]-offset_y, click[0]-offset_x]
 
@@ -723,9 +724,9 @@ class Controller(object):
 
   def file_iter(self,*dicts,**kwargs):
   
-    # print('file_iter')
-    # print(self.x_tiles)
-    # print(self.y_tiles)
+    #print('file_iter')
+    #print(self.x_tiles)
+    #print(self.y_tiles)
 
     lend = range(len(dicts))
     for x in self.x_tiles:
@@ -758,6 +759,7 @@ class Controller(object):
         list_of_names = []
         with h5py.File(os.path.join(ids_data_path,seg), 'r') as f:
           f.visit(list_of_names.append)
+          #print(dicts[0])
           dicts[0][x][y] = f[list_of_names[0]][()]
 
     # Return the only dictionary or all dictionaries
@@ -808,7 +810,7 @@ class Controller(object):
       touches_left = any([ seg in rows[0][:,0] for seg in self.ids ])
       touches_right = any([ seg in rows[0][:,-1] for seg in self.ids ])
       touches_bottom = any([ seg in rows[0][-1,:] for seg in self.ids ])
-
+      #print(self.ids)
       label_touches_border = touches_left or touches_right or touches_bottom or touches_top
 
       if not label_touches_border:
@@ -819,7 +821,9 @@ class Controller(object):
       if touches_left and self.x_tiles[0] > 0:
 
         # alright, we need to include more tiles in left x direction
+        #print('touch_left')
         self.x_tiles = [self.x_tiles[0]-1] + self.x_tiles
+        #print(self.x_tiles)
         new_data = True
 
       if touches_top and self.y_tiles[0] > 0:
@@ -923,8 +927,8 @@ class Controller(object):
       brush_segment_ids.pop(0)
       i_js = np.split(i_js, brush_segment_ids)
 
-    # print('i_js: ',i_js)
-    # print(np.all(i_js > 0, axis=1))
+    #print('i_js: ',i_js)
+    #print(np.all(i_js > 0, axis=1))
 
     # print(i_js)
     # print('brush sizes: ',brush_sizes)
@@ -1022,6 +1026,7 @@ class Controller(object):
     print('split go...')
 
     values = input['value']
+    print(values)
     self.z = values['z']
     bb = values['brush_bbox']
     self.label_id = values['id']
@@ -1063,15 +1068,18 @@ class Controller(object):
     offset_y = self.y_tiles[0]*512
 
     bb_relative = bb - np.array([offset_x]*2 + [offset_y]*2)
+    #print(bb_relative)
     sub_tile = row_img[bb_relative[2]:bb_relative[3],bb_relative[0]:bb_relative[1]]
+    #mh.imsave('/home/boyu/row_image.jpg',row_img)
     seg_sub_tile = row_seg[bb_relative[2]:bb_relative[3],bb_relative[0]:bb_relative[1]]
-
+    #mh.imsave('/home/boyu/row_seg.jpg',row_seg.astype(np.uint8))
     sub_tile = mh.gaussian_filter(sub_tile, 1).astype(np.uint8) # gaussian filter
     sub_tile = (255 * exposure.equalize_hist(sub_tile)).astype(np.uint8) # enhance contrast
 
     brush_size = values['brush_size']
 
     i_js = values['i_js']
+    #print(i_js)
 
     # make sparse points in i_js a dense line (with linear interpolation)
     dense_brush = []
@@ -1163,11 +1171,13 @@ class Controller(object):
 
     lines_array = np.zeros(ws.shape,dtype=np.uint8)
     lines = []
+    #print(self.lookup_label(1))
+    #print(self.lookup_label(255))
 
     for y in range(ws.shape[0]-1):
       for x in range(ws.shape[1]-1):
 
-        # print 'looking for', seg_sub_tile[y,x]
+        #print('looking for', seg_sub_tile[y,x])
 
         if self.lookup_label(seg_sub_tile[y,x]) != self.label_id:
           continue
@@ -1197,14 +1207,15 @@ class Controller(object):
     output['origin'] = input['origin']
     output['value'] = lines
 
-    ## print(output)
+    print(output)
     self.__websocket.send(json.dumps(output))
 
   def tile_iter(self,*dicts):
     lend = range(len(dicts))
     rows = [None]*len(dicts)
     first_row = True
-    for r in dicts[0].keys():
+    keys_all = {i for i in sorted(dicts[0].keys())}
+    for r in keys_all:
       cols = [None]*len(dicts)
       first_col = True
 
