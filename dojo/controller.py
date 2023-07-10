@@ -619,13 +619,13 @@ class Controller(object):
     s_tile = np.zeros(row_val.shape)
     s_tile[row_val == self.label_id] = 1
     #print(row_val)
-    #mh.imsave('/home/boyu/t_val.jpg', row_val.astype(np.uint8))
+    #mh.imsave('/home/boyu/t_val.tif', row_val.astype(np.uint16))
 
     for c in i_js:
       s_tile[c[1]-offset_y, c[0]-offset_x] = 0
 
     label_image,n = mh.label(s_tile)
-    #mh.imsave('/home/boyu/label.jpg', row_val.astype(np.uint8))
+    #mh.imsave('/home/boyu/label.tif', s_tile.astype(np.uint16))
     # check which label was selected
     selected_label = label_image[click[1]-offset_y, click[0]-offset_x]
 
@@ -1218,8 +1218,8 @@ class Controller(object):
     for r in keys_all:
       cols = [None]*len(dicts)
       first_col = True
-
-      for c in dicts[0][r]:
+      keys_all_2 = {j for j in sorted(dicts[0][r].keys())}
+      for c in keys_all_2:
         if first_col:
           cols = [dicts[i][r][c] for i in lend]
           first_col = False
