@@ -570,7 +570,8 @@ class Controller(object):
   def finalize_split(self, input):
 
     values = input['value']
-    bb = values['bbox']
+    #bb = values['bbox']
+    bb = [0,1023,0,1023]
     image = self.__dojoserver.get_image()
     self.label_id = values['id']
     self.z = values['z']
